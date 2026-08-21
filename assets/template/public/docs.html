@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>课件阅读</title>
+<style>
+:root{
+  --mint-50:#f0fdfa;--mint-100:#ccfbf1;--mint-200:#99f6e4;--mint-400:#2dd4bf;--mint-500:#14b8a6;--mint-600:#0d9488;--mint-700:#0f766e;
+  --ink:#134e4a;--sub:#0f766e99;--line:#99f6e455;--bg:#f6fdfb;--card:#ffffff;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:#1f2937;line-height:1.85;font-size:15.5px}
+.wrap{max-width:860px;margin:0 auto;padding:28px 20px 80px}
+.topbar{position:sticky;top:0;z-index:9;background:rgba(246,253,251,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 0;margin-bottom:22px}
+.topbar-inner{max-width:860px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:12px}
+.topbar a.home{color:var(--mint-600);text-decoration:none;font-weight:600;font-size:14px;white-space:nowrap}
+.topbar .ttl{font-size:14px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.doc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:34px 38px;box-shadow:0 1px 3px rgba(13,148,136,.05)}
+h1{font-size:24px;color:var(--ink);margin:26px 0 14px;line-height:1.4}
+h2{font-size:20px;color:var(--ink);margin:34px 0 12px;padding-left:12px;border-left:4px solid var(--mint-500);line-height:1.4}
+h3{font-size:17px;color:var(--mint-700);margin:24px 0 10px}
+h4{font-size:15.5px;color:var(--mint-700);margin:18px 0 8px}
+p{margin:10px 0}
+a{color:var(--mint-600);text-decoration:none;border-bottom:1px dashed var(--mint-400)}
+a:hover{color:var(--mint-700);border-bottom-style:solid}
+ul,ol{padding-left:1.6em;margin:10px 0}
+li{margin:6px 0}
+blockquote{margin:16px 0;padding:12px 18px;background:var(--mint-50);border-left:4px solid var(--mint-400);border-radius:0 10px 10px 0;color:#115e59}
+blockquote p{margin:4px 0}
+strong{color:var(--ink)}
+hr{border:none;border-top:1px solid var(--line);margin:26px 0}
+code{background:var(--mint-50);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:.9em;color:var(--mint-700);word-break:break-all}
+/* 飞书 grid → 栅格 */
+.grid{display:grid;gap:14px;margin:18px 0;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.grid .col{background:var(--mint-50);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center}
+.grid .col p{font-size:13.5px;color:#374151;margin:6px 0}
+/* 飞书 button → 大按钮 */
+.btn{display:block;margin:8px auto 4px;padding:9px 22px;background:var(--mint-500);color:#fff !important;border:none;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--mint-600);border:none}
+/* 图片 */
+.imgbox{margin:14px auto;text-align:center}
+.imgbox img{max-width:100%;border-radius:12px;border:1px solid var(--line)}
+.imgph{display:inline-block;margin:4px 0;padding:8px 16px;background:var(--mint-50);border:1px dashed var(--mint-400);border-radius:10px;color:var(--mint-600);font-size:13px;text-decoration:none}
+a.imgph{border-bottom:none;font-weight:600}
+.imgph:hover{background:var(--mint-100)}
+/* callout */
+.callout{display:flex;gap:12px;margin:16px 0;padding:14px 18px;background:#fffbeb;border:1px solid #fcd34d66;border-radius:12px}
+.callout .em{font-size:18px;line-height:1.6}
+/* 表格 */
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--mint-50);color:var(--ink)}
+tr:nth-child(even) td{background:#fafdfa}
+/* cite 文档引用 */
+.doccite{display:inline-flex;align-items:center;gap:6px;background:var(--mint-100);color:var(--mint-700);border-radius:8px;padding:2px 10px;font-size:.92em}
+.loading{text-align:center;color:#9ca3af;padding:80px 0;font-size:14px}
+.err{text-align:center;padding:60px 20px;color:#b91c1c}
+.err a{color:var(--mint-600)}
+@media(max-width:640px){.doc{padding:22px 18px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-inner">
+  <a class="home" href="index.html">← 学习台</a>
+  <span class="ttl" id="docTitle">课件阅读</span>
+</div></div>
+<div class="wrap"><div class="doc" id="content"><div class="loading">正在加载课件…</div></div></div>
+
+<script>
+/* ============ 飞书导出标记 → HTML 渲染器 ============ */
+const $ = s => document.querySelector(s);
+
+/* —— 极简 Markdown(标题/加粗/行内代码/引用块/链接/列表/分隔线) —— */
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function inlineMd(s){
+  s = esc(s);
+  s = s.replace(/`([^`]+)`/g,"<code>$1</code>");
+  s = s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  s = s.replace(/(^|[\s(])(https?:\/\/[^\s<)】]+)(?=[\s)。，,；;]|$)/g,'$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+  return s;
+}
+function mdBlocks(lines){
+  const out = []; let i = 0;
+  // 行内若含行内级 HTML 标签(飞书块内常见 <b>/<p> 等),保留标签不转义
+  const hasTag = s => /<\/?(p|b|strong|i|em|u|s|code|br|span|sub|sup|cite)\b/i.test(s);
+  const inline = s => hasTag(s) ? s.replace(/&(?![a-z]+;)/g,"&amp;") : inlineMd(s);
+  const flushList = (tag) => { out.push(`<${tag}>` + listBuf.join("") + `</${tag}>`); listBuf = []; };
+  let listBuf = [], listTag = null;
+  while(i < lines.length){
+    const L = lines[i];
+    if(/^\s*$/.test(L)){ i++; continue; }
+    if(listTag && !/^\s*([-*]|\d+\.)\s/.test(L)){ flushList(listTag); listTag = null; }
+    let m;
+    if(m = L.match(/^(#{1,4})\s+(.*)/)){ const h = m[1].length; out.push(`<h${h}>${inline(m[2])}</h${h}>`); }
+    else if(/^\s*>\s?/.test(L)){
+      const buf = [];
+      while(i < lines.length && /^\s*>\s?/.test(lines[i])){ buf.push(lines[i].replace(/^\s*>\s?/,"")); i++; }
+      out.push(`<blockquote>${buf.map(b=>`<p>${inline(b)}</p>`).join("")}</blockquote>`); continue;
+    }
+    else if(m = L.match(/^\s*([-*])\s+(.*)/)){ listTag="ul"; listBuf.push(`<li>${inline(m[2])}</li>`); }
+    else if(m = L.match(/^\s*\d+\.\s+(.*)/)){ listTag="ol"; listBuf.push(`<li>${inline(m[1])}</li>`); }
+    else if(/^\s*(---+|\*\*\*+)\s*$/.test(L)){ out.push("<hr>"); }
+    else{
+      // 段落: 连续非空行合并(跳过已识别块)
+      const buf=[L]; let j=i+1;
+      while(j<lines.length && !/^\s*$/.test(lines[j]) && !/^(#{1,4}\s|\s*>|\s*[-*]\s|\s*\d+\.\s|\s*(---+|\*\*\*+)\s*$)/.test(lines[j])){ buf.push(lines[j]); j++; }
+      out.push(`<p>${buf.map(inline).join("<br>")}</p>`);
+      i = j; continue;
+    }
+    i++;
+  }
+  if(listTag) flushList(listTag);
+  return out.join("\n");
+}
+
+/* —— 行内级飞书元素转换(cite/button/img,任意容器复用) —— */
+function convertInlineFeishu(h){
+  // <cite> 文档/用户引用 → 芯片
+  h = h.replace(/<cite\b([^>]*)>\s*<\/cite>/g, (m, attrs) => {
+    if(attrs.includes("user-name")){
+      const u = (attrs.match(/user-name="([^"]*)"/) || [,"成员"])[1];
+      return `<span class="doccite user">@${u}</span>`;
+    }
+    const t = (attrs.match(/title="([^"]*)"/) || [,"飞书文档"])[1];
+    return `<span class="doccite">📄 ${t}(飞书文档引用)</span>`;
+  });
+  // <button src> → 真按钮
+  h = h.replace(/<button[^>]*src="([^"]+)"[^>]*>([\s\S]*?)<\/button>/g,
+    (m, src, label) => `<a class="btn" href="${src}" target="_blank" rel="noopener">${label.trim() || "打开链接"}</a>`);
+  // 裸 <cite> 无闭合(防御)
+  h = h.replace(/<cite\b([^>]*)(?<!\/)>(?!<\/cite>)/g, (m, attrs) => {
+    if(attrs.includes("user-name")){
+      const u = (attrs.match(/user-name="([^"]*)"/) || [,"成员"])[1];
+      return `<span class="doccite user">@${u}</span>`;
+    }
+    const t = (attrs.match(/title="([^"]*)"/) || [,"飞书文档"])[1];
+    return `<span class="doccite">📄 ${t}(飞书文档引用)</span>`;
+  });
+  // 飞书内嵌 <img src="token">(无完整 URL)→ 指向飞书文件页的图卡
+  h = h.replace(/<img\s+([^>]*?)\/?>/g, (m, attrs) => {
+    const tk  = (attrs.match(/\bsrc="([A-Za-z0-9]{20,})"/) || [,""])[1];
+    const alt = (attrs.match(/alt="([^"]*)"/) || [,""])[1];
+    const nm  = (attrs.match(/name="([^"]*)"/) || [,""])[1];
+    const cap = nm || alt.slice(0,36) || "配图";
+    return tk ? `<a class="imgph" href="https://www.feishu.cn/file/${tk}" target="_blank" rel="noopener">🖼 ${esc(cap)} · 点击在飞书查看 ↗</a>`
+              : `<span class="imgph">🖼 ${esc(cap)}(配图)</span>`;
+  });
+  return h;
+}
+
+/* —— 飞书私有标签替换 —— */
+function renderFeishu(text){
+  let h = text;
+  // 1) grid/column → 栅格
+  h = h.replace(/<grid>([\s\S]*?)<\/grid>/g, (m, inner) => {
+    const cols = [];
+    let cm, re = /<column[^>]*>([\s\S]*?)<\/column>/g;
+    while((cm = re.exec(inner)) !== null) cols.push(cm[1]);
+    return `<div class="grid">` + cols.map(c => `<div class="col">${convertInlineFeishu(c)}</div>`).join("") + `</div>`;
+  });
+  // 2) callout(内部先转换行内飞书元素,再走 mdBlocks)
+  h = h.replace(/<callout\s+emoji="([^"]*)"\s*>([\s\S]*?)<\/callout>/g,
+    (m, emo, body) => `<div class="callout"><span class="em">${emo}</span><div>${mdBlocks(convertInlineFeishu(body).split("\n"))}</div></div>`);
+  // 3) 顶层残余 button/img/cite
+  h = convertInlineFeishu(h);
+  // 4) 净化
+  h = h.replace(/<\/?(synced_reference|readonly-block)[^>]*>/g, "");
+  return h;
+}
+
+/* —— 组装:逐块拆分 markdown 与飞书标签 —— */
+function render(raw){
+  // 段落级飞书块整体抽出渲染,其余走 markdown;markdown 内的 ![alt](url) 图片正常保留
+  const out = [];
+  const re = /<grid>[\s\S]*?<\/grid>|<callout[\s\S]*?<\/callout>|<img\s[^>]*\/?>|<table>[\s\S]*?<\/table>/g;
+  let last = 0, m;
+  while((m = re.exec(raw)) !== null){
+    if(m.index > last) out.push(mdBlocks(raw.slice(last, m.index).split("\n")));
+    const seg = m[0];
+    out.push(seg.startsWith("<img") ? convertInlineFeishu(seg)
+           : seg.startsWith("<table") ? sanitizeTable(seg)
+           : renderFeishu(seg));
+    last = m.index + seg.length;
+  }
+  if(last < raw.length) out.push(mdBlocks(raw.slice(last).split("\n")));
+  let html = out.join("\n");
+  // 兜底:任何漏网的飞书行内元素再扫一遍
+  html = convertInlineFeishu(html);
+  return html;
+}
+
+/* —— 飞书表格:内部 grid/行内元素转换后放行(浏览器原生渲染) —— */
+function sanitizeTable(t){
+  // 表格单元格内嵌 grid → 简单并排
+  t = t.replace(/<grid>([\s\S]*?)<\/grid>/g, (m, inner) => {
+    const cols = [];
+    let cm, re = /<column[^>]*>([\s\S]*?)<\/column>/g;
+    while((cm = re.exec(inner)) !== null) cols.push(convertInlineFeishu(cm[1]));
+    return cols.join(" · ");
+  });
+  t = convertInlineFeishu(t);
+  t = t.replace(/<\/?(synced_reference|readonly-block)[^>]*>/g, "");
+  return t;
+}
+
+/* —— 加载 —— */
+(async function(){
+  const src = new URLSearchParams(location.search).get("src") || "docs/第1课_AI硬件起步指南.md";
+  const box = $("#content");
+  try{
+    const res = await fetch(src);
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const raw = await res.text();
+    const t = (raw.match(/<title>([^<]*)<\/title>/) || [,"课件"])[1];
+    document.title = t; $("#docTitle").textContent = t;
+    box.innerHTML = render(raw.replace(/<title>[\s\S]*?<\/title>/, ""));
+  }catch(e){
+    box.innerHTML = `<div class="err">课件加载失败(${esc(e.message)})<br><a href="${esc(src)}" target="_blank">直接打开原始文件 ↗</a>　<a href="index.html">返回学习台</a></div>`;
+  }
+})();
+</script>
+</body>
+</html>

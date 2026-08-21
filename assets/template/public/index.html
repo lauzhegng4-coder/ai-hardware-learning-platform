@@ -427,7 +427,7 @@ function openCourse(no){
   if(c.materials.length){
     empty.style.display='none';
     document.getElementById('d-materials').innerHTML = c.materials.map(m=>
-      `<div class="mat"><span class="mt">${m.type}</span><a href="${m.file}" target="_blank">${m.name} ↗</a></div>`).join('');
+      `<div class="mat"><span class="mt">${m.type}</span><a href="${m.file.endsWith('.md') ? 'docs.html?src=' + encodeURIComponent(m.file) : m.file}" target="_blank">${m.name} ↗</a></div>`).join('');
   } else { empty.style.display='flex'; document.getElementById('d-materials').innerHTML=''; }
   document.getElementById('d-homework').textContent = c.hw;
   document.getElementById('d-knowledge').innerHTML = c.knowledge.length
@@ -484,7 +484,7 @@ function renderTodaySections(){
           <div class="s-foot">
             <input type="checkbox" id="cb-${s.id}" ${checked} onchange="toggleSec('${s.id}',this)">
             <label for="cb-${s.id}">${live?'已观看':'已完成该小节'}</label>
-            ${s.link?`<a class="s-link" href="${s.link}" target="_blank">打开课件 ↗</a>`:''}
+            ${s.link?`<a class="s-link" href="docs.html?src=${encodeURIComponent(s.link)}" target="_blank">打开课件 ↗</a>`:''}
           </div>
         </div>
       </div>`;
