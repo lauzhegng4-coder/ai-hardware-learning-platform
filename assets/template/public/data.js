@@ -56,3 +56,31 @@ function buildTasks(){
   tasks.push({id:"p2", txt:"预习第 2 课：跑通第一条链路（08.22 周六晚8点直播）", meta:"预习 · 第 2 课"});
   return tasks;
 }
+
+/* ============================================================
+ * 小节级学习计划（独立配置，不属于 COURSES 教材内核）
+ * day: 计划日期；secs: 小节（id 勾选键 / dur 时长分钟 / hw 挂载作业题）
+ * 预习任务已移除：下一课内容不提前释放，直播日以直播收尾。
+ * ============================================================ */
+const LESSON1_PLAN = [
+  { day:"2026-08-21", label:"周五 · 约 48 分钟", secs:[
+    { id:"s101", no:"01-01", t:"起点为什么变了", dur:15, point:"AI 两种角色 + 真机验证顺序", hw:"作业② 我的理解（约 5 分钟，学完即写）", link:"docs/第1课_AI硬件起步指南.md" },
+    { id:"s102", no:"01-02", t:"真的需要做成硬件吗", dur:15, point:"五方向检查 + 使用者/拥有者/未使用者三方影响", link:"docs/第1课_AI硬件起步指南.md" },
+    { id:"s103", no:"01-04", t:"量产路线与 9 角色（速览）", dur:8, point:"7 阶段一句话理解 + 9 角色清单", hw:"作业① 选角色（约 5 分钟）", link:"docs/第1课_AI硬件起步指南.md" }
+  ]},
+  { day:"2026-08-22", label:"周六 · 直播日 · 约 45 分钟", secs:[
+    { id:"s104", no:"01-03", t:"开发板解剖", dur:20, point:"PCB/元器件/PCBA/开发板 + 正反面部件", link:"docs/第1课_AI硬件起步指南.md" },
+    { id:"s105", no:"01-05", t:"开工四步", dur:15, point:"整理资料 → 搭环境 → 对齐上下文 → 最小开发", hw:"作业③ 流程箭头（约 10 分钟）", link:"docs/第1课_AI硬件起步指南.md" },
+    { id:"live2", no:"📺", t:"20:00 第 2 课直播", dur:0, point:"跑通第一条链路，搭建 AI 硬件完整开发流程", link:"" }
+  ]}
+];
+
+// 生成某一天的小节卡数据；不传则取当前日期
+function buildDayPlan(dateStr){
+  const today = dateStr || new Date().toISOString().slice(0,10);
+  const plans = LESSON1_PLAN.filter(p=>p.day===today);
+  return plans.length ? plans[0] : null;
+}
+
+// 小节勾选状态存 LS_TASK（复用 tasks 存储键，id 即小节 id）
+function isSecDone(id){ const st=getTasks(); return !!st[id]; }

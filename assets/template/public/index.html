@@ -177,6 +177,30 @@
   .theme-opt:hover{border-color:var(--mint-400);color:var(--mint-700)}
   .theme-opt.on{background:var(--mint-500);border-color:var(--mint-500);color:#fff}
 
+  /* ---------- Day plan (section cards) ---------- */
+  .sec{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:16px 18px;box-shadow:var(--shadow);margin-bottom:14px;display:flex;gap:14px;
+    align-items:flex-start;transition:.18s}
+  .sec:hover{border-color:var(--mint-300)}
+  .sec.done{opacity:.62}
+  .sec .s-no{width:52px;height:52px;border-radius:13px;background:var(--mint-50);color:var(--mint-700);
+    font-size:13px;font-weight:800;display:grid;place-items:center;flex:none;line-height:1.2;text-align:center}
+  .sec .s-body{flex:1}
+  .sec .s-title{font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .sec .s-title .dur{font-size:11px;font-weight:600;color:var(--ink-faint);background:var(--mint-50);
+    padding:2px 9px;border-radius:20px}
+  .sec .s-point{font-size:13px;color:var(--ink-soft);margin-top:4px}
+  .sec .s-hw{margin-top:9px;font-size:12.5px;color:var(--mint-700);background:var(--mint-50);
+    border-radius:10px;padding:7px 11px;display:inline-block}
+  .sec .s-foot{margin-top:10px;display:flex;align-items:center;gap:12px}
+  .sec .s-foot input{width:16px;height:16px;accent-color:var(--mint-500);cursor:pointer}
+  .sec .s-foot label{font-size:12.5px;color:var(--ink-faint);cursor:pointer;user-select:none}
+  .sec .s-link{font-size:12.5px;color:var(--mint-600);text-decoration:none;font-weight:600}
+  .sec .s-link:hover{text-decoration:underline}
+  .day-label{font-size:13px;font-weight:700;color:var(--mint-700);margin:18px 0 10px;display:flex;align-items:center;gap:8px}
+  .day-label:first-child{margin-top:0}
+  .day-label .bar{width:4px;height:16px;border-radius:3px;background:var(--mint-400)}
+
   /* ---------- Topbar (cloud mode) ---------- */
   .topbar{display:flex;justify-content:space-between;align-items:center;
     background:#fff;border:1px solid var(--line);border-radius:14px;
@@ -275,10 +299,11 @@
 
     <!-- ============ TODAY ============ -->
     <section class="view" id="today">
-      <div class="page-head"><h1>今日学习</h1><p>2026-08-21 · 周五 · 距结营 38 天</p></div>
-      <div class="card">
-        <h3>📋 今日任务清单 <span class="tag" id="taskCount">—</span></h3>
-        <div id="todayTasks"></div>
+      <div class="page-head"><h1>今日学习</h1><p id="todayHead">—</p></div>
+      <div id="dayPlan"></div>
+      <div class="card" id="todayAllDone" style="display:none">
+        <h3>🎉 今天的小节已全部完成</h3>
+        <p style="font-size:13px;color:var(--ink-soft)" id="todayDoneNote"></p>
       </div>
     </section>
 
@@ -368,7 +393,6 @@ function toggleTask(id,box){
   box.closest('.task').classList.toggle('done', box.checked);
   const list = buildTasks();
   renderTasks(document.getElementById('homeTasks'), list);
-  renderTasks(document.getElementById('todayTasks'), list);
 }
 
 function updateProgress(){
@@ -433,13 +457,68 @@ function renderWorks(){
   document.getElementById('worksEmpty').style.display='block';
 }
 
+/* ---------- Today: section-level plan ---------- */
+function renderTodaySections(){
+  const plan = buildDayPlan();
+  const wrap = document.getElementById('dayPlan');
+  const allDone = document.getElementById('todayAllDone');
+  const head = document.getElementById('todayHead');
+  if(!plan){
+    wrap.innerHTML = `<div class="card"><div class="empty">今天没有排课。<br>可自由复习「复习中心」，或到「课程计划」预习下一课安排。</div></div>`;
+    allDone.style.display='none';
+    head.textContent = new Date().toLocaleDateString('zh-CN');
+    return;
+  }
+  const st = getTasks();
+  head.textContent = `${plan.day} · ${plan.label}`;
+  wrap.innerHTML = `<div class="day-label"><span class="bar"></span>${plan.day} · ${plan.label}</div>` +
+    plan.secs.map(s=>{
+      const checked = st[s.id] ? 'checked' : '';
+      const live = s.no==='📺';
+      return `<div class="sec ${st[s.id]?'done':''}" id="sec-${s.id}">
+        <div class="s-no">${s.no}</div>
+        <div class="s-body">
+          <div class="s-title">${s.t}${s.dur?`<span class="dur">⏱ ${s.dur} 分钟</span>`:''}</div>
+          <div class="s-point">${s.point}</div>
+          ${s.hw?`<div class="s-hw">✍ ${s.hw}</div>`:''}
+          <div class="s-foot">
+            <input type="checkbox" id="cb-${s.id}" ${checked} onchange="toggleSec('${s.id}',this)">
+            <label for="cb-${s.id}">${live?'已观看':'已完成该小节'}</label>
+            ${s.link?`<a class="s-link" href="${s.link}" target="_blank">打开课件 ↗</a>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  const doneCount = plan.secs.filter(s=>st[s.id]).length;
+  if(doneCount===plan.secs.length){
+    allDone.style.display='block';
+    document.getElementById('todayDoneNote').textContent = plan.day==="2026-08-22"
+      ? "第 1 课五个小节全部完成，可到「课程计划」把第 1 课标记为已完成。"
+      : "今天安排已完成。明天是直播日：开发板解剖 + 开工四步 + 20:00 第 2 课直播。";
+  } else allDone.style.display='none';
+}
+
+function toggleSec(id, box){
+  const st = getTasks(); st[id] = box.checked; setTasks(st);
+  box.closest('.sec').classList.toggle('done', box.checked);
+  // 全勾提示联动
+  const plan = buildDayPlan();
+  if(plan){
+    const doneCount = plan.secs.filter(s=>getTasks()[s.id]).length;
+    document.getElementById('todayAllDone').style.display =
+      doneCount===plan.secs.length ? 'block' : 'none';
+  }
+  // 同步首页今日任务摘要（首页沿用粗粒度勾选）
+  const l1 = plan && plan.secs.every(s=>getTasks()[s.id]);
+  if(l1){ const d=getDone(); if(!d["1"]){} }
+}
+
 /* ---------- Init ---------- */
 const initTasks = buildTasks();
 renderCourses();
 updateProgress();
 renderTasks(document.getElementById('homeTasks'), initTasks);
-renderTasks(document.getElementById('todayTasks'), initTasks);
-document.getElementById('taskCount').textContent = initTasks.length + ' 项';
+renderTodaySections();
 renderReview();
 renderWorks();
 
@@ -532,8 +611,7 @@ async function bootstrap(){
         updateProgress();
         const list = buildTasks();
         renderTasks(document.getElementById('homeTasks'), list);
-        renderTasks(document.getElementById('todayTasks'), list);
-        document.getElementById('taskCount').textContent = list.length + ' 项';
+        renderTodaySections();
       }
     }
   }catch(e){ /* 本地模式 */ }
