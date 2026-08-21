@@ -1,6 +1,6 @@
 ---
 name: ai-hardware-learning-platform
-description: This skill should be used when the user wants to build or scaffold an AI-hardware / training-camp learning platform — a mint-themed course web app with Feishu (Lark) login, a free Turso (libSQL/SQLite) database, and Vercel-ready serverless deployment. Trigger phrases include "搭建学习台", "AI 硬件学习台", "训练营学习平台", "薄荷风课程站", "飞书登录 + 免费数据库 + Vercel". It bundles a complete, deployable template (frontend + api + lib + package.json) plus a setup reference.
+description: This skill should be used when the user wants to build or scaffold an AI-hardware / training-camp learning platform — a course web app with 3 switchable themes (mint fresh / blue-white study / pink Ins), Feishu (Lark) login, a free Turso (libSQL/SQLite) database, and Vercel-ready serverless deployment. Trigger phrases include "搭建学习台", "AI 硬件学习台", "训练营学习平台", "薄荷风课程站", "蓝白学习风", "粉色 Ins 风", "飞书登录 + 免费数据库 + Vercel". It bundles a complete, deployable template (frontend + api + lib + package.json) plus a setup reference.
 agent_created: true
 ---
 
@@ -16,7 +16,7 @@ agent_created: true
 ## 如何使用
 1. 把 `assets/template/` 整体复制到目标项目目录——它已是一个可部署的 Vercel 项目（静态前端 + serverless 函数）。
 2. 课程内容写在 `assets/template/public/data.js`（`COURSES` 数组 + `materials`/`knowledge`）。**硬约束：`data.js` 是只读教材内核，个性化只通过引擎层实现，不改它的结构与数据。**
-3. 前端 `public/index.html` 已内置：飞书登录顶部栏、登录后从 `/api/progress` 拉取并覆盖本地进度、勾选 / 标记完成时回写云端；**未配置任何环境变量时自动降级为 localStorage 本地模式，部署即可用**。
+3. 前端 `public/index.html` 已内置：**3 套可切换主题**（薄荷清新 / 蓝白学习 / 粉色 Ins，设置页一键切换、localStorage 记忆）、飞书登录顶部栏、登录后从 `/api/progress` 拉取并覆盖本地进度、勾选 / 标记完成时回写云端；**未配置任何环境变量时自动降级为 localStorage 本地模式，部署即可用**（登录按钮变为本地模式提示，不跳 404）。
 4. 后端三函数：`api/auth.js`（飞书 OAuth 登录 / 回调 / 退出）、`api/me.js`（当前用户）、`api/progress.js`（按飞书 `open_id` 隔离的进度 / 答题 / 画像读写）。
 5. lib 三层：`lib/db.js`（Turso 免费 SQLite）、`lib/session.js`（JWT HttpOnly Cookie）、`lib/feishu.js`（飞书 OAuth）。
 6. 部署与配置见 `references/deploy.md`（建飞书应用、建 Turso 库、Vercel 填 env、`vercel dev` / `vercel --prod`）。
