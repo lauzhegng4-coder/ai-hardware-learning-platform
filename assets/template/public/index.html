@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 硬件学习台</title>
+<style>
+  :root{
+    --mint-50:#f0fdfa; --mint-100:#ccfbf1; --mint-200:#99f6e4;
+    --mint-300:#5eead4; --mint-400:#2dd4bf; --mint-500:#14b8a6;
+    --mint-600:#0d9488; --mint-700:#0f766e;
+    --ink:#0f3d3a; --ink-soft:#456b66; --ink-faint:#7d9b96;
+    --bg:#f3fdfb; --card:#ffffff; --line:#d8f3ec; --shadow:0 4px 20px rgba(20,184,166,.10);
+    --warn:#f59e0b; --ok:#10b981;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.6}
+  .app{display:flex;min-height:100vh}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{width:230px;background:linear-gradient(180deg,#ffffff,#f0fdfa);
+    border-right:1px solid var(--line);padding:22px 16px;position:fixed;height:100vh;overflow-y:auto}
+  .logo{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;
+    color:var(--mint-700);margin-bottom:26px;padding:0 6px}
+  .logo .dot{width:11px;height:11px;border-radius:50%;background:var(--mint-400);
+    box-shadow:0 0 0 4px var(--mint-100)}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:11px;
+    color:var(--ink-soft);cursor:pointer;margin-bottom:4px;font-weight:500;transition:.18s}
+  .nav-item:hover{background:var(--mint-50);color:var(--mint-700)}
+  .nav-item.active{background:var(--mint-500);color:#fff;box-shadow:var(--shadow)}
+  .nav-item .ic{font-size:16px}
+  .side-foot{margin-top:26px;padding:14px;border-radius:12px;background:var(--mint-50);
+    font-size:12px;color:var(--ink-faint);line-height:1.7}
+
+  /* ---------- Content ---------- */
+  .content{margin-left:230px;flex:1;padding:30px 38px;max-width:1180px}
+  .view{display:none;animation:fade .25s ease}
+  .view.show{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .page-head{margin-bottom:22px}
+  .page-head h1{font-size:23px;font-weight:700;color:var(--ink)}
+  .page-head p{color:var(--ink-faint);font-size:13px;margin-top:4px}
+
+  /* ---------- Dashboard ---------- */
+  .welcome{background:linear-gradient(120deg,var(--mint-500),var(--mint-400));
+    border-radius:18px;padding:24px 28px;color:#fff;margin-bottom:22px;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+  .welcome h2{font-size:21px;font-weight:700}
+  .welcome p{opacity:.92;margin-top:6px;font-size:13px}
+  .welcome .due{background:rgba(255,255,255,.18);border-radius:14px;padding:12px 18px;text-align:right}
+  .welcome .due .d{font-size:26px;font-weight:800;line-height:1}
+  .welcome .due .l{font-size:12px;opacity:.9}
+
+  .grid{display:grid;gap:18px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:1.4fr 1fr}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:20px;box-shadow:var(--shadow)}
+  .card h3{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:14px;
+    display:flex;align-items:center;gap:8px}
+  .card h3 .tag{font-size:11px;font-weight:600;color:var(--mint-700);background:var(--mint-50);
+    padding:3px 9px;border-radius:20px}
+
+  .ring-wrap{display:flex;align-items:center;gap:18px}
+  .ring{--p:14;width:96px;height:96px;border-radius:50%;flex:none;
+    background:conic-gradient(var(--mint-500) calc(var(--p)*1%),var(--mint-100) 0);
+    display:grid;place-items:center}
+  .ring::before{content:"";width:70px;height:70px;border-radius:50%;background:#fff}
+  .ring span{position:absolute;font-size:20px;font-weight:800;color:var(--mint-700)}
+  .ring-info .big{font-size:22px;font-weight:800;color:var(--ink)}
+  .ring-info .sub{color:var(--ink-faint);font-size:13px}
+
+  .stage{display:flex;flex-direction:column;gap:11px}
+  .stage-row{display:flex;align-items:center;gap:10px;font-size:13px}
+  .stage-dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .stage-row.done .stage-dot{background:var(--ok)}
+  .stage-row.now .stage-dot{background:var(--mint-500);box-shadow:0 0 0 4px var(--mint-100)}
+  .stage-row.todo .stage-dot{background:var(--line)}
+  .stage-row.now{font-weight:700;color:var(--mint-700)}
+
+  .task{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+  .task:last-child{border-bottom:none}
+  .task input{margin-top:4px;width:16px;height:16px;accent-color:var(--mint-500);cursor:pointer}
+  .task .t-txt{font-size:13px}
+  .task .t-meta{font-size:11px;color:var(--ink-faint);margin-top:2px}
+  .task.done .t-txt{text-decoration:line-through;color:var(--ink-faint)}
+
+  .diag-bar{height:10px;border-radius:6px;background:var(--mint-100);overflow:hidden;margin:6px 0 4px}
+  .diag-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--mint-400),var(--mint-500))}
+  .diag-note{font-size:12px;color:var(--ink-soft)}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--mint-500);color:#fff;
+    border:none;border-radius:11px;padding:12px 22px;font-size:14px;font-weight:600;cursor:pointer;
+    box-shadow:var(--shadow);transition:.18s}
+  .btn:hover{background:var(--mint-600);transform:translateY(-1px)}
+  .btn.ghost{background:var(--mint-50);color:var(--mint-700);box-shadow:none}
+
+  /* ---------- Courses ---------- */
+  .course-list{display:grid;gap:14px}
+  .course{display:flex;gap:18px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);transition:.18s;cursor:pointer}
+  .course:hover{border-color:var(--mint-300);transform:translateY(-2px)}
+  .course .no{width:46px;height:46px;border-radius:12px;background:var(--mint-50);color:var(--mint-700);
+    font-size:18px;font-weight:800;display:grid;place-items:center;flex:none}
+  .course .c-body{flex:1}
+  .course .c-body h4{font-size:16px;font-weight:700;color:var(--ink)}
+  .course .c-body p{font-size:13px;color:var(--ink-faint);margin-top:3px}
+  .course .c-meta{display:flex;gap:14px;margin-top:9px;font-size:12px;color:var(--ink-soft)}
+  .course .c-meta span{display:flex;align-items:center;gap:4px}
+  .pill{font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;align-self:center;flex:none}
+  .pill.done{background:#ecfdf5;color:#059669}
+  .pill.now{background:var(--mint-100);color:var(--mint-700)}
+  .pill.todo{background:#f1f5f9;color:#94a3b8}
+.pill.soon{background:#fff7ed;color:#ea580c}
+
+  /* ---------- Course Detail ---------- */
+  .back{display:inline-block;margin-bottom:10px;color:var(--mint-600);font-size:13px;font-weight:600;cursor:pointer}
+  .back:hover{text-decoration:underline}
+  .mat{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line)}
+  .mat:last-child{border-bottom:none}
+  .mat .mt{font-size:11px;font-weight:700;color:var(--mint-700);background:var(--mint-50);padding:3px 9px;border-radius:20px;flex:none}
+  .mat a{color:var(--ink);text-decoration:none;font-size:13px}
+  .mat a:hover{color:var(--mint-600);text-decoration:underline}
+  .hw-box{background:var(--mint-50);border-radius:12px;padding:14px;font-size:13px;color:var(--ink-soft);line-height:1.7}
+  .empty{text-align:center;color:var(--ink-faint);padding:30px 0;font-size:13px}
+
+  /* ---------- Works ---------- */
+  .works{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .work{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;
+    box-shadow:var(--shadow)}
+  .work .w-top{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+  .work .avatar{width:40px;height:40px;border-radius:50%;background:var(--mint-200);color:var(--mint-700);
+    font-weight:800;display:grid;place-items:center;flex:none}
+  .work .w-name{font-weight:700;font-size:14px}
+  .work .w-course{font-size:11px;color:var(--ink-faint)}
+  .work .w-title{font-weight:700;color:var(--ink);margin-bottom:6px;font-size:14px}
+  .work .w-desc{font-size:13px;color:var(--ink-soft)}
+  .work .w-foot{margin-top:12px;display:flex;justify-content:space-between;align-items:center;
+    font-size:12px;color:var(--ink-faint)}
+  .work .like{display:flex;align-items:center;gap:4px;color:var(--mint-600);font-weight:600}
+
+  .banner{background:var(--mint-50);border:1px dashed var(--mint-300);border-radius:14px;
+    padding:14px 18px;font-size:13px;color:var(--mint-700);margin-bottom:18px;display:flex;gap:8px}
+
+  /* ---------- Settings ---------- */
+  .set-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;
+    border-bottom:1px solid var(--line);font-size:14px}
+  .set-row:last-child{border-bottom:none}
+  .set-row .k{font-weight:600;color:var(--ink)}
+  .set-row .v{color:var(--ink-faint)}
+  .swatch{display:flex;gap:7px}
+  .swatch i{width:22px;height:22px;border-radius:6px;display:inline-block}
+
+  /* ---------- Topbar (cloud mode) ---------- */
+  .topbar{display:flex;justify-content:space-between;align-items:center;
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:10px 16px;margin-bottom:22px;box-shadow:var(--shadow)}
+  .tb-left{font-weight:700;color:var(--mint-700);font-size:14px;display:flex;align-items:center;gap:8px}
+  .tb-left .badge{font-size:11px;font-weight:600;color:#fff;background:var(--mint-400);
+    padding:2px 9px;border-radius:20px}
+  .tb-left .badge.local{background:var(--ink-faint)}
+  .tb-right{display:flex;align-items:center;gap:10px}
+  .u-hint{font-size:12px;color:var(--ink-faint)}
+  .u-avatar{width:30px;height:30px;border-radius:50%;background:var(--mint-200);color:var(--mint-700);
+    font-weight:800;display:grid;place-items:center;overflow:hidden;flex:none}
+  .u-avatar img{width:100%;height:100%;object-fit:cover}
+  .u-name{font-size:13px;font-weight:600;color:var(--ink)}
+
+  ::-webkit-scrollbar{width:8px}
+  ::-webkit-scrollbar-thumb{background:var(--mint-200);border-radius:8px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><span class="dot"></span>AI 硬件学习台</div>
+    <div class="nav-item active" data-view="home"><span class="ic">🏠</span>学习首页</div>
+    <div class="nav-item" data-view="today"><span class="ic">📅</span>今日学习</div>
+    <div class="nav-item" data-view="courses"><span class="ic">📚</span>课程计划</div>
+    <div class="nav-item" data-view="review"><span class="ic">🔁</span>复习中心</div>
+    <div class="nav-item" data-view="works"><span class="ic">🏆</span>优秀作业</div>
+    <div class="nav-item" data-view="settings"><span class="ic">⚙️</span>本地设置</div>
+    <div class="side-foot">
+      数据来源：WaytoAGI 第七期 AI 硬件训练营<br>
+      本地离线版 · 资料已缓存至 docs/<br>
+      课程表图片：docs/第七期AI硬件训练营课程表.png
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <div class="tb-left">AI 硬件学习台 · <span class="badge local" id="modeBadge">离线版</span></div>
+      <div class="tb-right" id="userBox"></div>
+    </div>
+    <!-- ============ HOME ============ -->
+    <section class="view show" id="home">
+      <div class="welcome">
+        <div>
+          <h2>你好，同学 👋</h2>
+          <p>今天距结营还有 38 天，保持节奏，先跑通路径，后深入细节。</p>
+        </div>
+        <div class="due">
+          <div class="d">09-28</div>
+          <div class="l">预计完成日期</div>
+        </div>
+      </div>
+
+      <div class="grid g3">
+        <div class="card">
+          <h3>📊 当前学习进度</h3>
+          <div class="ring-wrap">
+            <div class="ring" style="--p:14"><span id="pgNum">14%</span></div>
+            <div class="ring-info">
+              <div class="big">1 / 8 课</div>
+              <div class="sub">第 1 课已完成，第 2 课 08.22 开课</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>🎯 当前阶段 <span class="tag">P0</span></h3>
+          <div class="stage">
+            <div class="stage-row done"><span class="stage-dot"></span>需求验证与最小闭环</div>
+            <div class="stage-row now"><span class="stage-dot"></span>开发板、固件、构建与烧录</div>
+            <div class="stage-row todo"><span class="stage-dot"></span>原理图 / PCB / GPIO（P1）</div>
+            <div class="stage-row todo"><span class="stage-dot"></span>结构 / 量产 / 售后（P2）</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>🔍 进度诊断</h3>
+          <div class="diag-bar"><i style="width:14%"></i></div>
+          <div class="diag-note">整体符合预期。第 1 课已达标，建议本周内完成第 2 课「开发板跑通」并产出首个硬件闭环。</div>
+          <button class="btn ghost" style="margin-top:12px" onclick="go('today')">查看今日任务</button>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-top:18px">
+        <div class="card">
+          <h3>✅ 今日任务</h3>
+          <div id="homeTasks"></div>
+        </div>
+        <div class="card">
+          <h3>🚀 继续学习</h3>
+          <p style="color:var(--ink-soft);font-size:13px;margin-bottom:14px">下节直播：第 2 课 · 跑通第一条链路，搭建 AI 硬件完整开发流程（08.22 周六晚8点）</p>
+          <button class="btn" onclick="go('courses')">▶ 查看课程计划</button>
+          <div class="banner" style="margin:16px 0 0">💡 提示：软件显示成功 ≠ 硬件成功，验收以真实设备物理反馈为准。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TODAY ============ -->
+    <section class="view" id="today">
+      <div class="page-head"><h1>今日学习</h1><p>2026-08-21 · 周五 · 距结营 38 天</p></div>
+      <div class="card">
+        <h3>📋 今日任务清单 <span class="tag" id="taskCount">—</span></h3>
+        <div id="todayTasks"></div>
+      </div>
+    </section>
+
+    <!-- ============ COURSES ============ -->
+    <section class="view" id="courses">
+      <div class="page-head"><h1>课程计划</h1><p>共 8 节大课 · 来源：第七期 AI 硬件训练营课表</p></div>
+      <div class="course-list" id="courseList"></div>
+    </section>
+
+    <section class="view" id="detail">
+      <span class="back" onclick="go('courses')">← 返回课程计划</span>
+      <div class="page-head"><h1 id="d-title"></h1><p id="d-meta"></p></div>
+      <div class="banner" id="d-empty" style="display:none">📥 本课资料待补充，用户会随课程推进发送课件与资料。</div>
+      <div class="grid g2">
+        <div class="card">
+          <h3>📚 课件与资料</h3>
+          <div id="d-materials"></div>
+        </div>
+        <div class="card">
+          <h3>📝 课后作业</h3>
+          <div class="hw-box" id="d-homework"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <h3>💡 核心知识点</h3>
+        <div class="grid g2" id="d-knowledge"></div>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <h3>✅ 学习状态</h3>
+        <button class="btn" id="d-toggle" onclick="toggleCourseDone()"></button>
+      </div>
+    </section>
+
+    <!-- ============ REVIEW ============ -->
+    <section class="view" id="review">
+      <div class="page-head"><h1>复习中心</h1><p>按知识地图优先级回顾关键判断框架</p></div>
+      <div class="banner">🔁 复习建议：优先回顾 P0「硬件成立条件」与「最小闭环」两张卡片，它们是后续所有决策的基础。</div>
+      <div class="grid g2" id="reviewCards"></div>
+    </section>
+
+    <!-- ============ WORKS ============ -->
+    <section class="view" id="works">
+      <div class="page-head"><h1>优秀作业</h1><p>来自社群的优秀投稿与结营作品展示</p></div>
+      <div class="works" id="workList"></div>
+      <div class="empty" id="worksEmpty" style="display:none">📭 暂无可展示的优秀作业。训练营作业提交系统开通后，将从真实投稿中抓取展示。</div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section class="view" id="settings">
+      <div class="page-head"><h1>本地设置</h1><p>学习台为本地离线版，所有数据存于本机</p></div>
+      <div class="card">
+        <h3>⚙️ 基础信息</h3>
+        <div class="set-row"><span class="k">主题色</span><span class="v"><span class="swatch">
+          <i style="background:#2dd4bf"></i><i style="background:#14b8a6"></i><i style="background:#0d9488"></i><i style="background:#99f6e4"></i>
+        </span> 薄荷清新</span></div>
+        <div class="set-row"><span class="k">资料目录</span><span class="v">./docs（已缓存 4 份）</span></div>
+        <div class="set-row"><span class="k">课程总数</span><span class="v">8 节大课</span></div>
+        <div class="set-row"><span class="k">预计完成</span><span class="v">2026-09-28</span></div>
+        <div class="set-row"><span class="k">数据状态</span><span class="v">课程/知识点/作业为真实数据，进度本地记录</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="data.js"></script>
+<script>
+/* ---------- Render ---------- */
+function pill(s){
+  return s==="done"?'<span class="pill done">已完成</span>'
+       : s==="now"?'<span class="pill now">进行中</span>'
+       : s==="soon"?'<span class="pill soon">即将开始</span>'
+       :'<span class="pill todo">未开始</span>'
+}
+
+function renderTasks(el, list){
+  const st = getTasks();
+  el.innerHTML = list.map(t=>`
+    <label class="task ${st[t.id]?'done':''}">
+      <input type="checkbox" ${st[t.id]?'checked':''} onchange="toggleTask('${t.id}',this)">
+      <div><div class="t-txt">${t.txt}</div><div class="t-meta">${t.meta}</div></div>
+    </label>`).join('');
+}
+function toggleTask(id,box){
+  const st = getTasks(); st[id]=box.checked; setTasks(st);
+  box.closest('.task').classList.toggle('done', box.checked);
+  const list = buildTasks();
+  renderTasks(document.getElementById('homeTasks'), list);
+  renderTasks(document.getElementById('todayTasks'), list);
+}
+
+function updateProgress(){
+  const done = getDone();
+  const n = COURSES.filter(c=>done[c.no]).length;
+  const pct = Math.round(n/COURSES.length*100);
+  const ring = document.getElementById('pgNum');
+  ring.textContent = pct + '%';
+  ring.parentElement.style.setProperty('--p', pct);
+  document.querySelector('#home .ring-info .big').textContent = n + ' / ' + COURSES.length + ' 课';
+}
+
+function renderCourses(){
+  document.getElementById('courseList').innerHTML = COURSES.map(c=>`
+    <div class="course" onclick="openCourse(${c.no})">
+      <div class="no">${c.no}</div>
+      <div class="c-body">
+        <h4>${c.title}</h4>
+        <p style="margin-top:6px"><b>讲师：</b>${c.teacher} &nbsp;|&nbsp; <b>时间：</b>${c.date}</p>
+        <p style="margin-top:4px;font-size:12px;color:var(--ink-soft)"><b>作业：</b>${c.hw}</p>
+      </div>
+      ${pill(c.status)}
+    </div>`).join('');
+}
+
+function openCourse(no){
+  const c = COURSES.find(x=>x.no===no);
+  const done = getDone();
+  document.getElementById('d-title').textContent = c.title;
+  document.getElementById('d-meta').textContent = `讲师：${c.teacher} ｜ 时间：${c.date}`;
+  const empty = document.getElementById('d-empty');
+  if(c.materials.length){
+    empty.style.display='none';
+    document.getElementById('d-materials').innerHTML = c.materials.map(m=>
+      `<div class="mat"><span class="mt">${m.type}</span><a href="${m.file}" target="_blank">${m.name} ↗</a></div>`).join('');
+  } else { empty.style.display='flex'; document.getElementById('d-materials').innerHTML=''; }
+  document.getElementById('d-homework').textContent = c.hw;
+  document.getElementById('d-knowledge').innerHTML = c.knowledge.length
+    ? c.knowledge.map(k=>`<div class="card"><h3>💡 ${k.t}</h3><p style="font-size:13px;color:var(--ink-soft)">${k.d}</p></div>`).join('')
+    : '<div class="empty">本课知识点提炼待补充。</div>';
+  const btn = document.getElementById('d-toggle');
+  btn.textContent = done[c.no] ? '✓ 已完成 · 点击撤销' : '标记本课已完成';
+  btn.dataset.no = c.no;
+  go('detail');
+}
+
+function toggleCourseDone(){
+  const no = +document.getElementById('d-toggle').dataset.no;
+  const done = getDone(); done[no] = !done[no]; setDone(done);
+  updateProgress(); openCourse(no);
+}
+
+function renderReview(){
+  const all = COURSES.flatMap(c=>c.knowledge.map(k=>({...k})));
+  document.getElementById('reviewCards').innerHTML = all.length
+    ? all.map(k=>`<div class="card"><h3>💡 ${k.t}</h3><p style="font-size:13px;color:var(--ink-soft)">${k.d}</p></div>`).join('')
+    : '<div class="empty">暂无复习内容，完成课程后将自动汇总知识点。</div>';
+}
+
+function renderWorks(){
+  document.getElementById('workList').innerHTML='';
+  document.getElementById('worksEmpty').style.display='block';
+}
+
+/* ---------- Init ---------- */
+const initTasks = buildTasks();
+renderCourses();
+updateProgress();
+renderTasks(document.getElementById('homeTasks'), initTasks);
+renderTasks(document.getElementById('todayTasks'), initTasks);
+document.getElementById('taskCount').textContent = initTasks.length + ' 项';
+renderReview();
+renderWorks();
+
+/* ---------- Cloud sync (Feishu 登录 + 免费 Turso) ---------- */
+let CURRENT_USER = null;
+
+// 包装本地写入：登录后把进度回写云端
+const _setDone = setDone;
+setDone = function(o){ _setDone(o); syncProgress(); };
+const _setTasks = setTasks;
+setTasks = function(o){ _setTasks(o); syncProgress(); };
+
+async function syncProgress(){
+  if(!CURRENT_USER) return;
+  try{
+    await fetch("/api/progress", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ done:getDone(), tasks:getTasks() })
+    });
+  }catch(e){ /* 离线忽略 */ }
+}
+
+function login(){ window.location.href = "/api/auth?action=login"; }
+function logout(){ window.location.href = "/api/auth?action=logout"; }
+
+function renderUserBar(){
+  const box = document.getElementById('userBox');
+  const badge = document.getElementById('modeBadge');
+  if(CURRENT_USER){
+    badge.textContent = "在线版"; badge.classList.remove('local');
+    const av = CURRENT_USER.avatar
+      ? `<span class="u-avatar"><img src="${CURRENT_USER.avatar}" alt=""></span>`
+      : `<span class="u-avatar">${(CURRENT_USER.name||"学")[0]}</span>`;
+    box.innerHTML = `${av}<span class="u-name">${CURRENT_USER.name}</span>
+      <button class="btn ghost" style="padding:6px 12px;font-size:12px" onclick="logout()">退出</button>`;
+    const hi = document.querySelector('.welcome h2');
+    if(hi) hi.textContent = `下午好，${CURRENT_USER.name} 👋`;
+  } else {
+    badge.textContent = "离线版"; badge.classList.add('local');
+    const err = location.search.includes('auth_error')
+      ? `<span class="u-hint" style="color:#ea580c">登录未配置，先部署并填写环境变量</span>`
+      : `<span class="u-hint">未登录 · 数据仅存本机</span>`;
+    box.innerHTML = `${err}
+      <button class="btn" style="padding:7px 14px;font-size:13px" onclick="login()">用飞书登录</button>`;
+  }
+  // 同步设置页「数据状态」文案
+  const row = [...document.querySelectorAll('#settings .set-row')]
+    .find(r=>r.textContent.includes('数据状态'));
+  if(row) row.querySelector('.v').textContent = CURRENT_USER
+    ? "已登录飞书 · 进度云端同步" : "课程/知识点/作业为真实数据，进度本地记录";
+}
+
+async function bootstrap(){
+  try{
+    const me = await fetch("/api/me");
+    if(me.ok){
+      CURRENT_USER = await me.json();
+      const p = await fetch("/api/progress");
+      if(p.ok){
+        const data = await p.json();
+        localStorage.setItem(LS_DONE, data.done || "{}");
+        localStorage.setItem(LS_TASK, data.tasks || "{}");
+        updateProgress();
+        const list = buildTasks();
+        renderTasks(document.getElementById('homeTasks'), list);
+        renderTasks(document.getElementById('todayTasks'), list);
+        document.getElementById('taskCount').textContent = list.length + ' 项';
+      }
+    }
+  }catch(e){ /* 本地模式 */ }
+  renderUserBar();
+}
+
+/* ---------- View switch ---------- */
+function go(v){
+  document.querySelectorAll('.view').forEach(s=>s.classList.remove('show'));
+  document.getElementById(v).classList.add('show');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===v));
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('.nav-item').forEach(n=>n.onclick=()=>go(n.dataset.view));
+
+bootstrap();
+</script>
+</body>
+</html>
