@@ -197,7 +197,7 @@
     <section class="view show" id="home">
       <div class="welcome">
         <div>
-          <h2>你好，同学 👋</h2>
+          <h2>下午好，Jack 👋</h2>
           <p>今天距结营还有 38 天，保持节奏，先跑通路径，后深入细节。</p>
         </div>
         <div class="due">
@@ -436,7 +436,15 @@ async function syncProgress(){
   }catch(e){ /* 离线忽略 */ }
 }
 
-function login(){ window.location.href = "/api/auth?action=login"; }
+let BACKEND_OK = false; // 探测到 /api/me 正常响应才算有后端
+
+async function login(){
+  if(!BACKEND_OK){
+    alert("当前为本地模式：未部署后端（飞书登录需 Vercel 部署并配置环境变量）。进度已自动存本机，不影响使用。");
+    return;
+  }
+  window.location.href = "/api/auth?action=login";
+}
 function logout(){ window.location.href = "/api/auth?action=logout"; }
 
 function renderUserBar(){
@@ -456,8 +464,11 @@ function renderUserBar(){
     const err = location.search.includes('auth_error')
       ? `<span class="u-hint" style="color:#ea580c">登录未配置，先部署并填写环境变量</span>`
       : `<span class="u-hint">未登录 · 数据仅存本机</span>`;
+    const btn = BACKEND_OK
+      ? `<button class="btn" style="padding:7px 14px;font-size:13px" onclick="login()">用飞书登录</button>`
+      : `<button class="btn ghost" style="padding:7px 14px;font-size:13px;cursor:help" onclick="login()">本地模式 · 了解云同步</button>`;
     box.innerHTML = `${err}
-      <button class="btn" style="padding:7px 14px;font-size:13px" onclick="login()">用飞书登录</button>`;
+      ${btn}`;
   }
   // 同步设置页「数据状态」文案
   const row = [...document.querySelectorAll('#settings .set-row')]
@@ -470,6 +481,7 @@ async function bootstrap(){
   try{
     const me = await fetch("/api/me");
     if(me.ok){
+      BACKEND_OK = true;
       CURRENT_USER = await me.json();
       const p = await fetch("/api/progress");
       if(p.ok){
