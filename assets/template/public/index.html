@@ -6,12 +6,30 @@
 <title>AI 硬件学习台</title>
 <style>
   :root{
+    /* 主题槽位（历史命名 --mint-*，现为语义变量，由 data-theme 切换）*/
     --mint-50:#f0fdfa; --mint-100:#ccfbf1; --mint-200:#99f6e4;
     --mint-300:#5eead4; --mint-400:#2dd4bf; --mint-500:#14b8a6;
     --mint-600:#0d9488; --mint-700:#0f766e;
     --ink:#0f3d3a; --ink-soft:#456b66; --ink-faint:#7d9b96;
     --bg:#f3fdfb; --card:#ffffff; --line:#d8f3ec; --shadow:0 4px 20px rgba(20,184,166,.10);
-    --warn:#f59e0b; --ok:#10b981;
+    --warn:#f59e0b; --ok:#10b981; --ok-bg:#ecfdf5; --ok-fg:#059669;
+  }
+  /* 主题 2：蓝白学习风 */
+  [data-theme="blue"]{
+    --mint-50:#eff6ff; --mint-100:#dbeafe; --mint-200:#bfdbfe;
+    --mint-300:#93c5fd; --mint-400:#60a5fa; --mint-500:#3b82f6;
+    --mint-600:#2563eb; --mint-700:#1d4ed8;
+    --ink:#172a45; --ink-soft:#41567a; --ink-faint:#7187a8;
+    --bg:#f4f8ff; --card:#ffffff; --line:#d7e5fb; --shadow:0 4px 20px rgba(59,130,246,.10);
+  }
+  /* 主题 3：粉色 Ins 风 */
+  [data-theme="pink"]{
+    --mint-50:#fdf2f8; --mint-100:#fce7f3; --mint-200:#fbcfe8;
+    --mint-300:#f9a8d4; --mint-400:#f472b6; --mint-500:#ec4899;
+    --mint-600:#db2777; --mint-700:#be185d;
+    --ink:#42253a; --ink-soft:#7a5370; --ink-faint:#a67f9b;
+    --bg:#fdf6fa; --card:#ffffff; --line:#f6d9e8; --shadow:0 4px 20px rgba(236,72,153,.10);
+    --ok:#ec4899; --ok-bg:#fdf2f8; --ok-fg:#be185d;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
@@ -109,7 +127,7 @@
   .course .c-meta{display:flex;gap:14px;margin-top:9px;font-size:12px;color:var(--ink-soft)}
   .course .c-meta span{display:flex;align-items:center;gap:4px}
   .pill{font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;align-self:center;flex:none}
-  .pill.done{background:#ecfdf5;color:#059669}
+  .pill.done{background:var(--ok-bg);color:var(--ok-fg)}
   .pill.now{background:var(--mint-100);color:var(--mint-700)}
   .pill.todo{background:#f1f5f9;color:#94a3b8}
 .pill.soon{background:#fff7ed;color:#ea580c}
@@ -151,6 +169,13 @@
   .set-row .v{color:var(--ink-faint)}
   .swatch{display:flex;gap:7px}
   .swatch i{width:22px;height:22px;border-radius:6px;display:inline-block}
+
+  /* ---------- Theme switcher ---------- */
+  .theme-opt{border:1.5px solid var(--line);background:var(--card);color:var(--ink-soft);
+    border-radius:20px;padding:5px 13px;font-size:12px;font-weight:600;cursor:pointer;
+    margin-left:6px;transition:.15s}
+  .theme-opt:hover{border-color:var(--mint-400);color:var(--mint-700)}
+  .theme-opt.on{background:var(--mint-500);border-color:var(--mint-500);color:#fff}
 
   /* ---------- Topbar (cloud mode) ---------- */
   .topbar{display:flex;justify-content:space-between;align-items:center;
@@ -306,9 +331,11 @@
       <div class="page-head"><h1>本地设置</h1><p>学习台为本地离线版，所有数据存于本机</p></div>
       <div class="card">
         <h3>⚙️ 基础信息</h3>
-        <div class="set-row"><span class="k">主题色</span><span class="v"><span class="swatch">
-          <i style="background:#2dd4bf"></i><i style="background:#14b8a6"></i><i style="background:#0d9488"></i><i style="background:#99f6e4"></i>
-        </span> 薄荷清新</span></div>
+        <div class="set-row"><span class="k">主题配色</span><span class="v">
+          <button class="theme-opt" data-th="" onclick="setTheme('')">薄荷清新</button>
+          <button class="theme-opt" data-th="blue" onclick="setTheme('blue')">蓝白学习</button>
+          <button class="theme-opt" data-th="pink" onclick="setTheme('pink')">粉色 Ins</button>
+        </span></div>
         <div class="set-row"><span class="k">资料目录</span><span class="v">./docs（已缓存 4 份）</span></div>
         <div class="set-row"><span class="k">课程总数</span><span class="v">8 节大课</span></div>
         <div class="set-row"><span class="k">预计完成</span><span class="v">2026-09-28</span></div>
@@ -415,6 +442,20 @@ renderTasks(document.getElementById('todayTasks'), initTasks);
 document.getElementById('taskCount').textContent = initTasks.length + ' 项';
 renderReview();
 renderWorks();
+
+/* ---------- Theme ---------- */
+const LS_THEME = "aihw_theme";
+function setTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem(LS_THEME, t||"mint");
+  document.querySelectorAll('.theme-opt').forEach(b=>b.classList.toggle('on', (b.dataset.th||"")===t));
+}
+(function(){
+  const t = localStorage.getItem(LS_THEME);
+  if(t && t!=="mint") document.documentElement.setAttribute("data-theme", t==="blue"?"blue":t==="pink"?"pink":"");
+  const cur = (document.documentElement.getAttribute("data-theme")||"");
+  document.querySelectorAll('.theme-opt').forEach(b=>b.classList.toggle('on', (b.dataset.th||"")===cur));
+})();
 
 /* ---------- Cloud sync (Feishu 登录 + 免费 Turso) ---------- */
 let CURRENT_USER = null;
